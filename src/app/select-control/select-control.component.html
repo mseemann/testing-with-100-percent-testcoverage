@@ -1,7 +1,11 @@
-<input [ngModel]="viewModel" (click)="inputClicked()" (focus)="inputFocused()" (blur)="inputBlurred()">
+<input
+  [ngModel]="viewModel"
+  (click)="optionsVisible = true"
+  (focus)="optionsVisible = true"
+  (blur)="onTouched()">
 <div *ngIf="optionsVisible" class="options">
-  <div *ngFor="let option of options" (click)="optionClicked(option)" class="option-item"
-  [ngClass]="{active:option===selectedOption}">
+  <div *ngFor="let option of options" (click)="optionSelected(option)" class="option-item"
+       [ngClass]="{active: option ===  selectedOption}">
     {{option.label}}
   </div>
 </div>
