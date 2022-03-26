@@ -7,7 +7,7 @@ describe('SelectControlComponent', () => {
     component = new SelectControlComponent<unknown>({} as any)
   });
 
-  it('should create teh component and have default inits', () => {
+  it('should create the component and have default inits', () => {
     expect(component).toBeTruthy();
     // just to ensure we reach 100% - so let's see if we have initialized teh callbacks ;)
     (component as any).onTouched();
