@@ -35,6 +35,7 @@ export class SelectControlComponent<T> implements ControlValueAccessor {
   registerOnChange(fn: (_: any) => void): void {
     this.onChange = (value) => {
       fn(value);
+      this.onTouched();
       this.selectionChanged.emit(value);
     }
   }
@@ -50,7 +51,6 @@ export class SelectControlComponent<T> implements ControlValueAccessor {
   public optionSelected(option: OptionWithLabel<T>) {
     this.selectedOption = option;
     this.onChange(option.value);
-    this.onTouched();
   }
 
   private onChange: (_: any) => void = () => {
