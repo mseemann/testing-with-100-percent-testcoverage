@@ -14,15 +14,29 @@ export class SelectControlComponent<T> implements ControlValueAccessor {
   public selectionChanged = new EventEmitter<T>();
 
   public viewModel: string = '';
-  public selectedOption: OptionWithLabel<T> | undefined;
   public optionsVisible = false;
 
   constructor(@Self() ngControl: NgControl) {
     ngControl.valueAccessor = this;
   }
 
+  private _selectedOption: OptionWithLabel<T> | undefined;
+
+  public get selectedOption(): OptionWithLabel<T> | undefined {
+    return this._selectedOption;
+  }
+
+  public set selectedOption(option: OptionWithLabel<T> | undefined) {
+    this._selectedOption = option;
+    this.viewModel = option ? option.label : ''
+    this.optionsVisible = false;
+  }
+
   registerOnChange(fn: (_: any) => void): void {
-    this.onChange = fn;
+    this.onChange = (value) => {
+      fn(value);
+      this.selectionChanged.emit(value);
+    }
   }
 
   registerOnTouched(fn: () => void): void {
@@ -30,38 +44,19 @@ export class SelectControlComponent<T> implements ControlValueAccessor {
   }
 
   writeValue(obj: T | null): void {
-    const selectedOption = this.options.find(option => option.value === obj);
-    this.updateSelection(selectedOption)
+    this.selectedOption = this.options.find(option => option.value === obj);
   }
 
-  public inputClicked() {
-    this.optionsVisible = true;
-  }
-
-  public inputBlurred() {
-    this.onTouched();
-  }
-
-  public inputFocused() {
-    this.optionsVisible = true;
-  }
-
-  public optionClicked(option: OptionWithLabel<T>) {
-    this.updateSelection(option)
+  public optionSelected(option: OptionWithLabel<T>) {
+    this.selectedOption = option;
     this.onChange(option.value);
     this.onTouched();
-    this.optionsVisible = false;
-    this.selectionChanged.emit(option.value);
   }
 
   private onChange: (_: any) => void = () => {
   };
 
-  private onTouched: () => void = () => {
+  public onTouched: () => void = () => {
   };
 
-  private updateSelection(selectedOption: OptionWithLabel<T> | undefined) {
-    this.selectedOption = selectedOption;
-    this.viewModel = this.selectedOption ? this.selectedOption.label : ''
-  }
 }

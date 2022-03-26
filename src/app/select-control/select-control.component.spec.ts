@@ -1,99 +1,109 @@
 import {SelectControlComponent} from './select-control.component';
+import {ComponentFixture, TestBed} from "@angular/core/testing";
+import {Component, DebugElement} from "@angular/core";
+import {FormControl, FormGroup, FormsModule, ReactiveFormsModule} from "@angular/forms";
+import {OptionWithLabel} from "./option-with-label.interface";
+import {By} from "@angular/platform-browser";
+
+@Component({
+  template: `
+    <form [formGroup]="form">
+      <app-select-control
+        [options]="nameOptions"
+        [formControl]="nameControl"
+        (selectionChanged)="nameSelectionChanged($event)"
+      ></app-select-control>
+    </form>
+  `
+})
+class TestComponent {
+  public nameControl = new FormControl();
+  public form = new FormGroup({
+    name: this.nameControl
+  })
+  public nameOptions: OptionWithLabel<string>[] = [
+    {value: 'o1', label: 'Option 1'},
+    {value: 'o2', label: 'Option 2'}
+  ];
+
+  nameSelectionChanged(option: string) {
+    console.log(option);
+  }
+}
 
 describe('SelectControlComponent', () => {
-  let component: SelectControlComponent<unknown>;
+  let component: TestComponent;
+  let selectComponent: SelectControlComponent<string>;
+  let fixture: ComponentFixture<TestComponent>;
+  let inputEl: DebugElement;
 
   beforeEach(async () => {
-    component = new SelectControlComponent<unknown>({} as any)
+    await TestBed.configureTestingModule({
+      declarations: [
+        TestComponent,
+        SelectControlComponent
+      ],
+      imports: [ReactiveFormsModule, FormsModule]
+    }).compileComponents();
   });
 
-  it('should create teh component and have default inits', () => {
-    expect(component).toBeTruthy();
-    // just to ensure we reach 100% - so let's see if we have initialized teh callbacks ;)
-    (component as any).onTouched();
-    (component as any).onChange();
+  beforeEach(() => {
+    fixture = TestBed.createComponent(TestComponent);
+    component = fixture.componentInstance;
+    selectComponent = fixture.debugElement.query(By.directive(SelectControlComponent)).componentInstance;
+    inputEl = fixture.debugElement.query(By.css('input'));
+    fixture.detectChanges();
   });
 
-  it('should register the onChange function', () => {
-    const fn = () => {
-    };
 
-    component.registerOnChange(fn);
-
-    expect((component as any).onChange).toBe(fn)
+  it('should create the SelectControlComponent with an empty value', () => {
+    expect(selectComponent).toBeTruthy();
+    expect(inputEl.nativeElement.value).toEqual('');
   });
 
-  it('should register the onTouch function', () => {
-    const fn = () => {
-    };
+  it('should show the options if the input is clicked', () => {
+    expect(fixture.debugElement.query(By.css('.options'))).toBeNull();
 
-    component.registerOnTouched(fn);
+    inputEl.triggerEventHandler('click', null);
+    fixture.detectChanges();
 
-    expect((component as any).onTouched).toBe(fn)
+    expect(fixture.debugElement.query(By.css('.options'))).not.toBeNull();
   });
 
-  it('should write a value and update the state', () => {
-    spyOn((component as any), 'updateSelection');
-    const option = {value: 'a', label: 'a'};
-    component.options = [option];
+  it('should show the options if the input get the focus', () => {
+    inputEl.triggerEventHandler('focus', null);
+    fixture.detectChanges();
 
-    component.writeValue('a');
-
-    expect((component as any).updateSelection).toHaveBeenCalledOnceWith(option)
+    expect(fixture.debugElement.query(By.css('.options'))).not.toBeNull();
   });
 
-  it('should open the options panel if the input is clicked', () => {
-    expect(component.optionsVisible).toBeFalsy();
+  it('should mark the form control as touched if the input lost the focus', () => {
+    expect(component.nameControl.touched).toBeFalsy();
 
-    component.inputClicked();
+    inputEl.triggerEventHandler('blur', null);
+    fixture.detectChanges();
 
-    expect(component.optionsVisible).toBeTruthy();
+    expect(component.nameControl.touched).toBeTruthy();
   });
 
-  it('should call onTouch if the input lost the focus', () => {
-    spyOn((component as any), 'onTouched');
+  it('should emit the selected option, adapt the view value and update the control value', async () => {
+    spyOn(component,'nameSelectionChanged');
+    // ensure the options are visible and can be selected
+    inputEl.triggerEventHandler('click', null);
+    fixture.detectChanges();
 
-    component.inputBlurred();
+    const optionItems = fixture.debugElement.queryAll(By.css('.option-item'));
+    optionItems[0].triggerEventHandler('click', null);
 
-    expect((component as any).onTouched).toHaveBeenCalled()
-  });
+    fixture.detectChanges();
+    // ensure the update reaches every part of the view
+    await fixture.whenStable()
+    expect(component.nameSelectionChanged).toHaveBeenCalledWith('o1')
+    expect(component.nameControl.value).toEqual('o1');
+    expect(inputEl.nativeElement.value).toEqual('Option 1');
 
-  it('should open the options panel if the input is focused', () => {
-    expect(component.optionsVisible).toBeFalsy();
+    const optionsPanel = fixture.debugElement.query(By.css('.options'));
+    expect(optionsPanel).toBeNull();
+  })
 
-    component.inputFocused();
-
-    expect(component.optionsVisible).toBeTruthy();
-  });
-
-  it('should update view, control and emit the option if a option is clicked', () => {
-    spyOn((component as any), 'updateSelection');
-    spyOn((component as any), 'onChange');
-    spyOn((component as any), 'onTouched');
-    spyOn(component.selectionChanged, 'emit');
-    const option1 = {value: 'a', label: 'a'};
-    const option2 = {value: 'b', label: 'b'};
-    component.options = [option1, option2];
-
-    component.optionClicked(option2);
-
-    expect(component.optionsVisible).toBeFalsy();
-    expect((component as any).onChange).toHaveBeenCalledOnceWith('b');
-    expect((component as any).onTouched).toHaveBeenCalled();
-    expect((component as any).updateSelection).toHaveBeenCalledOnceWith(option2);
-    expect(component.selectionChanged.emit).toHaveBeenCalledOnceWith('b')
-  });
-
-  it('should update the current selection and the view model', () => {
-    const option = {value: 'a', label: 'a'};
-    (component as any).updateSelection(option);
-    expect(component.selectedOption).toBe(option);
-    expect(component.viewModel).toBe('a');
-  });
-
-  it('should update the current selection and the view model in case there is no matching option', () => {
-    (component as any).updateSelection(undefined);
-    expect(component.selectedOption).toBe(undefined);
-    expect(component.viewModel).toBe('');
-  });
 });
