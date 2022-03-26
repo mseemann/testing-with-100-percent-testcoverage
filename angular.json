@@ -103,9 +103,21 @@
             ],
             "scripts": []
           }
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": [
+              "src/**/*.ts",
+              "src/**/*.html"
+            ]
+          }
         }
       }
     }
   },
-  "defaultProject": "testing-with-100-percent-testcoverage"
+  "defaultProject": "testing-with-100-percent-testcoverage",
+  "cli": {
+    "defaultCollection": "@angular-eslint/schematics"
+  }
 }
