@@ -1,0 +1,16 @@
+:host {
+  position: relative;
+  display: inline-block;
+}
+.options {
+  position: absolute;
+  width: 100%;
+}
+
+.option-item {
+  cursor: pointer;
+
+  &.active  {
+    background-color: gray;
+  }
+}

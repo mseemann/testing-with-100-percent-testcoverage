@@ -1,1 +1,11 @@
-<div></div>
+<form [formGroup]="form">
+  <label>The Name</label>
+  <app-select-control
+    [options]="nameOptions"
+    [formControl]="nameControl"
+    (selectionChanged)="nameSelectionChanged($event)"
+  ></app-select-control>
+  <diV>{{nameControl.value}}</diV>
+  <div>touched: {{nameControl.touched}}</div>
+  <div>dirty: {{nameControl.dirty}}</div>
+</form>
